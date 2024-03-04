@@ -48,16 +48,22 @@ def find_and_capture_text_from_url(url, verseNum):
     html_content = fetch_html_content(url)
     if html_content is None:
         return ""
-    print(html_content)
+    
     soup = BeautifulSoup(html_content, 'html.parser')
     captured_texts = []
 
     for tag in soup.find_all('h4'):
-        if str(verseNum) in tag.text or re.search(rf'\b{verseNum}\b', tag.text):
-            capture_text_until_next_h4(tag, captured_texts)
-            break  # Stop after the first match
-        print(captured_texts)
-    return ' '.join(captured_texts)
+        # Find ranges in the tag text
+        ranges = re.findall(r'(\d+)-(\d+)', tag.text)
+        # Convert verseNum to int for comparison (assuming verseNum is a string)
+        verseNum_int = int(verseNum)
+        for start, end in ranges:
+            if verseNum_int >= int(start) and verseNum_int <= int(end):
+                capture_text_until_next_h4(tag, captured_texts)
+                return ' '.join(captured_texts)  # Return immediately after finding the match
+
+    # If no matching range is found, return an empty string
+    return ""
 
 def capture_text_until_next_h4(tag, captured_texts):
   current = tag.find_next_sibling()

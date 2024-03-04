@@ -1,7 +1,10 @@
 import re
 import os
 import requests
-import datetime
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Global configuration
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
@@ -86,16 +89,17 @@ def write_and_get_pplx_podcast_script(scripture, captured_text):
                                                     {}).get('content', '')
     cleaned_response = clean_text(api_response)
 
-    with open(f'TodaysEcho-{scripture}.txt', 'w') as f:
+    with open(f'transcripts/{scripture}.txt', 'w') as f:
         f.write(cleaned_response)
-        
+    
+    return cleaned_response
 
-def digest_to_speech(file_path):
+def digest_to_speech(file_name):
   if not ELEVENLABS_API_KEY:
     print("ElevenLabs API key is not set.")
     return
 
-  with open(f"{file_path}.txt", 'r', encoding='utf-8') as file:
+  with open(f"transcripts/{file_name}.txt", 'r', encoding='utf-8') as file:
     text_to_speak = file.read()
 
   payload = {"model_id": "eleven_multilingual_v1", "text": text_to_speak}
@@ -107,7 +111,7 @@ def digest_to_speech(file_path):
   try:
     response = requests.post(ELEVENLABS_API_URL, json=payload, headers=headers)
     response.raise_for_status()
-    with open(f'{file_path}.mp3', 'wb') as f:
+    with open(f'dialogues/{file_name}.mp3', 'wb') as f:
       for chunk in response.iter_content(chunk_size=1024):
         if chunk:
           f.write(chunk)
