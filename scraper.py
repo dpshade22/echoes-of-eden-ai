@@ -52,17 +52,25 @@ def find_and_capture_text_from_url(url, verseNum):
     soup = BeautifulSoup(html_content, 'html.parser')
     captured_texts = []
 
+    # Try to convert verseNum to int for comparison, assuming it's a string or int
+    verseNumInt = int(verseNum) if isinstance(verseNum, str) else verseNum
+
     for tag in soup.find_all('h4'):
-        # Find ranges in the tag text
+        # Check if the verseNum is exactly mentioned in the tag
+        print(tag.text.split())
+        if f"({verseNumInt})" in tag.text.split():
+            capture_text_until_next_h4(tag, captured_texts)
+            return ' '.join(captured_texts)
+
+        # Find ranges in the tag text and check if verseNum falls within any range
         ranges = re.findall(r'(\d+)-(\d+)', tag.text)
-        # Convert verseNum to int for comparison (assuming verseNum is a string)
-        verseNum_int = int(verseNum)
         for start, end in ranges:
-            if verseNum_int >= int(start) and verseNum_int <= int(end):
+            if verseNumInt >= int(start) and verseNumInt <= int(end):
                 capture_text_until_next_h4(tag, captured_texts)
                 return ' '.join(captured_texts)  # Return immediately after finding the match
-
+    
     # If no matching range is found, return an empty string
+    print("No header found")
     return ""
 
 def capture_text_until_next_h4(tag, captured_texts):
